@@ -49,7 +49,8 @@
     "eventsource": "^3.0.5",
     "express": "^4.18.2",
     "node-fetch": "^3.3.2",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "express-rate-limit": "^8.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
