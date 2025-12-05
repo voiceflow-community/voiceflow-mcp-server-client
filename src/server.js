@@ -3,7 +3,7 @@ import apiRoutes from './api/index.js'
 import config from './config.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
-
+import rateLimit from 'express-rate-limit'
 // Get the directory name of the current module
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -44,6 +44,13 @@ async function startServer() {
     // Create Express app
     const app = express()
 
+    // Set up rate limiter: maximum of 100 requests per 15 minutes per IP
+    const rootLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 100,
+      message: { error: 'Too many requests from this IP, please try again later.' },
+    })
+
     // Add request logging middleware
     app.use((req, res, next) => {
       console.log(
@@ -77,7 +84,7 @@ async function startServer() {
     })
 
     // Root endpoint - serve the chat interface
-    app.get('/', (req, res) => {
+    app.get('/', rootLimiter, (req, res) => {
       res.sendFile(path.join(__dirname, '../public/index.html'))
     })
 
