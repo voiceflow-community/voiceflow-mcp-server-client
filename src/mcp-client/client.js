@@ -347,6 +347,18 @@ function truncateToolResponse(response, maxLength = 1000) {
   return response
 }
 
+// Helper to clamp/sanitize query timeout
+function sanitizeTimeoutMs(timeoutMs, defaultMs = 120000) {
+  const MIN_TIMEOUT = 1000  // 1 second
+  const MAX_TIMEOUT = 300000 // 5 minutes
+  let t = Number(timeoutMs)
+  if (!Number.isFinite(t) || isNaN(t)) return defaultMs
+  t = Math.floor(t)
+  if (t < MIN_TIMEOUT) return MIN_TIMEOUT
+  if (t > MAX_TIMEOUT) return MAX_TIMEOUT
+  return t
+}
+
 // Process a query using Claude and available MCP tools
 async function processQuery({
   query,
@@ -357,11 +369,14 @@ async function processQuery({
   llm_answer = false, // Whether to generate an LLM answer from tool responses
   lastResponseOnly = false, // Whether to return only the last tool response
 }) {
+  // Ensure queryTimeoutMs is a sane number
+  const safeTimeoutMs = sanitizeTimeoutMs(queryTimeoutMs, 120000)
+
   // Create a promise that will reject after the timeout
   const queryTimeout = new Promise((_, reject) => {
     setTimeout(
-      () => reject(new Error(`Query timed out after ${queryTimeoutMs}ms`)),
-      queryTimeoutMs
+      () => reject(new Error(`Query timed out after ${safeTimeoutMs}ms`)),
+      safeTimeoutMs
     )
   })
 
